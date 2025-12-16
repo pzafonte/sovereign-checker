@@ -162,29 +162,14 @@ go build
 
 ---
 
-## Example Report Output (Hypothetical)
+## Minimal Demo Command
 
-```json
-{
-  "address": "tb1qexample...",
-  "network": "testnet",
-  "data_source": "explorer_fallback_over_tor",
-  "onchain": {
-    "utxos": {
-      "count": 2,
-      "dust_count": 1,
-      "total_sats": 106804
-    }
-  },
-  "fees": {
-    "feerate_sat_vb": 6,
-    "estimated_sweep_sats": 2160
-  },
-  "plan": {
-    "action": "CONSOLIDATE_WITH_CAUTION"
-  },
-  "sovereignty_summary": "Small UTXOs increase fee sensitivity; consolidation improves spendability but has privacy tradeoffs."
-}
+```bash
+go run . \
+  -mode=cli \
+  -tor=127.0.0.1:9050 \
+  -network=testnet \
+  -address=tb1qexampleaddress
 ```
 
 ---
@@ -293,14 +278,29 @@ go run . -mode=cli -network=testnet -address=tb1qexampleaddress | jq '.plan'
 
 ---
 
-## Minimal Judge Demo Command
+## Example Report Output (Hypothetical)
 
-```bash
-go run . \
-  -mode=cli \
-  -tor=127.0.0.1:9050 \
-  -network=testnet \
-  -address=tb1qexampleaddress
+```json
+{
+  "address": "tb1qexample...",
+  "network": "testnet",
+  "data_source": "explorer_fallback_over_tor",
+  "onchain": {
+    "utxos": {
+      "count": 2,
+      "dust_count": 1,
+      "total_sats": 106804
+    }
+  },
+  "fees": {
+    "feerate_sat_vb": 6,
+    "estimated_sweep_sats": 2160
+  },
+  "plan": {
+    "action": "CONSOLIDATE_WITH_CAUTION"
+  },
+  "sovereignty_summary": "Small UTXOs increase fee sensitivity; consolidation improves spendability but has privacy tradeoffs."
+}
 ```
 
 
