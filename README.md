@@ -1,10 +1,11 @@
+
 # Bitcoin Wallet Sovereignty Health Checker
 
 A node-first tool that generates a **single JSON report** describing a Bitcoin wallet’s
 UTXO structure, fee exposure, consolidation guidance, and optional Lightning Network
 readiness.
 
-The goal is to make **wallet-level sovereignty risks explicit** using protocol-native data.
+Built for **bitcoin++ Taipei**.
 
 ---
 
@@ -26,7 +27,7 @@ This project answers a concrete question:
 
 ---
 
-## What the tool does
+## What the Tool Does
 
 Given a Bitcoin address, the tool produces a **single JSON report** that includes:
 
@@ -36,12 +37,12 @@ Given a Bitcoin address, the tool produces a **single JSON report** that include
 - Optional Lightning Network readiness (via LND)
 - A one-line **sovereignty summary** suitable for logs or dashboards
 
-The tool prefers **node-derived data** and clearly labels any fallback to third-party
+The tool prefers **local node data** and explicitly labels any fallback to third-party
 explorers.
 
 ---
 
-## Sovereignty model
+## Sovereignty Model
 
 This project uses a **practical definition of sovereignty**:
 
@@ -54,7 +55,33 @@ Explorer-backed mode exists as a **transparent fallback**, not a source of truth
 
 ---
 
-## Architecture overview
+## What This Tool Does NOT Do
+
+* Does not move funds
+* Does not create transactions
+* Does not auto-consolidate
+* Does not cluster addresses
+
+It surfaces **constraints**, not prescriptions.
+
+---
+
+## Why This Matters
+
+If you do not understand:
+
+* how many UTXOs you have,
+* how much it costs to move them,
+* and when consolidation becomes necessary,
+
+then your ability to use Bitcoin is implicitly delegated to wallet defaults and timing
+you do not control.
+
+This tool makes those tradeoffs explicit.
+
+---
+
+## Architecture Overview
 
 - **Language:** Go
 - **On-chain data**
@@ -75,7 +102,67 @@ Explorer-backed mode exists as a **transparent fallback**, not a source of truth
 
 ---
 
-## Example output
+## Installation Requirements
+
+### Required
+- **Go ≥ 1.21**
+
+### Optional (Recommended)
+- **Bitcoin Core** (node-only mode)
+- **Tor** (privacy-preserving queries)
+- **LND** (Lightning readiness checks)
+
+---
+
+## Dependency Setup
+
+### Install Go (macOS)
+
+```bash
+brew install go
+go version
+````
+
+---
+
+### Install Bitcoin Core (Optional)
+
+```bash
+brew install bitcoin
+bitcoind -testnet -daemon
+bitcoin-cli -testnet getblockchaininfo
+```
+
+---
+
+### Install Tor (Optional but Recommended)
+
+```bash
+brew install tor
+brew services start tor
+nc -zv 127.0.0.1 9050
+```
+
+---
+
+### Install LND (Optional)
+
+```TBD
+```
+
+---
+
+## Build & Run
+
+```bash
+git clone git@github.com:pzafonte/sovereign-checker.git
+cd sovereign-checker
+go build
+```
+
+---
+
+## Example Report Output (Hypothetical)
 
 ```json
 {
@@ -97,22 +184,123 @@ Explorer-backed mode exists as a **transparent fallback**, not a source of truth
     "action": "CONSOLIDATE_WITH_CAUTION"
   },
   "sovereignty_summary": "Small UTXOs increase fee sensitivity; consolidation improves spendability but has privacy tradeoffs."
-
 }
-
-## Command-line examples
-
-Below are common usage patterns, from minimal inspection to full sovereignty-focused configurations.
+```
 
 ---
 
-### Basic CLI usage
+## Command-Line Usage
 
-Generate a report for a Bitcoin address on testnet:
+### Basic CLI
 
 ```bash
 go run . \
   -mode=cli \
   -network=testnet \
   -address=tb1qexampleaddress
+```
+
+---
+
+### CLI with Tor Routing
+
+```bash
+go run . \
+  -mode=cli \
+  -tor=127.0.0.1:9050 \
+  -network=testnet \
+  -address=tb1qexampleaddress
+```
+
+---
+
+### CLI Using Bitcoin Core (Node-Only)
+
+```bash
+go run . \
+  -mode=cli \
+  -network=testnet \
+  -address=tb1qexampleaddress \
+  -bitcoindrpc=127.0.0.1:18332 \
+  -rpcuser=demo \
+  -rpcpassword=demopass
+```
+
+---
+
+### CLI with Lightning Readiness
+
+```bash
+go run . \
+  -mode=cli \
+  -network=testnet \
+  -address=tb1qexampleaddress \
+  -lncheck=true \
+  -lndurl=https://127.0.0.1:8080 \
+  -macaroon="$HOME/Library/Application Support/Lnd/data/chain/bitcoin/testnet/readonly.macaroon" \
+  -lndinsecure=true
+```
+
+---
+
+### Full Sovereignty Configuration (Tor + Lightning)
+
+```bash
+go run . \
+  -mode=cli \
+  -tor=127.0.0.1:9050 \
+  -network=testnet \
+  -address=tb1qexampleaddress \
+  -lncheck=true \
+  -lndurl=https://127.0.0.1:8080 \
+  -macaroon="$HOME/Library/Application Support/Lnd/data/chain/bitcoin/testnet/readonly.macaroon" \
+  -lndinsecure=true
+```
+
+---
+
+## HTTP Server Mode
+
+```bash
+go run . -mode=server -port=8080
+curl "http://localhost:8080/report?address=tb1qexampleaddress&network=testnet"
+```
+
+---
+
+## HTTP Server with Lightning Enabled
+
+```bash
+go run . \
+  -mode=server \
+  -port=8080 \
+  -lndenabled=true \
+  -lndurl=https://127.0.0.1:8080 \
+  -macaroon="$HOME/Library/Application Support/Lnd/data/chain/bitcoin/testnet/readonly.macaroon" \
+  -lndinsecure=true
+
+curl "http://localhost:8080/report?address=tb1qexampleaddress&network=testnet"
+```
+
+---
+
+## Demo-Friendly Output Filtering
+
+```bash
+go run . -mode=cli -network=testnet -address=tb1qexampleaddress | jq '.sovereignty_summary'
+go run . -mode=cli -network=testnet -address=tb1qexampleaddress | jq '.plan'
+```
+
+---
+
+## Minimal Judge Demo Command
+
+```bash
+go run . \
+  -mode=cli \
+  -tor=127.0.0.1:9050 \
+  -network=testnet \
+  -address=tb1qexampleaddress
+```
+
 
