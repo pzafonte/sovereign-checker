@@ -167,7 +167,6 @@ go build
 ```bash
 go run . \
   -mode=cli \
-  -tor=127.0.0.1:9050 \
   -network=testnet \
   -address=tb1qexampleaddress
 ```
